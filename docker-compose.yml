@@ -1,0 +1,117 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:12-alpine
+    container_name: openvault-postgres-db
+    expose:
+      - 5432
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data/
+    env_file:
+      - ./.env.db
+    restart: always
+    healthcheck:
+      test: pg_isready
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  redis:
+    image: redis:7.0.15
+    container_name: openvault-redis
+    expose:
+      - 6379
+    volumes: 
+      - cache:/data
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning
+    healthcheck:
+      test: redis-cli --raw incr ping
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    image: l1ghth4t/openvault-backend:latest
+    build:
+      context: ./src/
+      dockerfile: Dockerfile
+    container_name: openvault-backend
+    shm_size: 1g
+    expose:
+      - 8000
+    volumes:
+      - static_volume:/home/app/web/static
+      - media_volume:/home/app/web/media
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+    restart: always
+    healthcheck:
+      test: curl --fail http://localhost:8000 || exit 1
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    image: l1ghth4t/openvault-worker:latest
+    build:
+      context: ./src/
+      dockerfile: Dockerfile.worker
+    shm_size: 1g
+    volumes:
+      - static_volume:/home/app/web/static
+      - media_volume:/home/app/web/media
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - web
+      - redis
+    restart: always
+
+  # beat:
+  #   image: l1ghth4t/openvault-beat:latest
+  #   build:
+  #     context: ./src/
+  #     dockerfile: Dockerfile.beat
+  #   shm_size: 1g
+  #   volumes:
+  #     - static_volume:/home/app/web/static
+  #     - media_volume:/home/app/web/media
+  #   env_file:
+  #     - ./.env
+  #   depends_on:
+  #     - db
+  #     - web
+  #     - worker
+  #     - redis
+  #   restart: always
+
+  nginx:
+    image: l1ghth4t/openvault-nginx:latest
+    build: ./nginx/
+    container_name: openvault-nginx
+    volumes:
+      - static_volume:/home/app/web/static
+      - media_volume:/home/app/web/media
+    ports:
+      - ${API_PORT}:80
+    env_file:
+      - ./.env
+    depends_on:
+      - web
+    restart: always
+    healthcheck:
+      test: curl --fail http://localhost:80 || exit 1
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_volume:
+  static_volume:
+  media_volume:
+  cache:
