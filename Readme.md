@@ -2,7 +2,7 @@
 
 A file hosting service that you can quickly deploy on your server.
 
-# Configuring
+## Configuring
 
 Create `.env` file for web application:
 

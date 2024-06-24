@@ -32,11 +32,21 @@ services:
       timeout: 5s
       retries: 3
 
+  frontend:
+    image: l1ghth4t/openvault-frontend:latest
+    build:
+      context: ./frontend/
+      dockerfile: ../docker/frontend/Dockerfile
+    container_name: openvault-frontend
+    expose:
+      - 3000
+    restart: always
+
   backend:
     image: l1ghth4t/openvault-backend:latest
     build:
-      context: ./src/
-      dockerfile: Dockerfile
+      context: ./backend/
+      dockerfile: ../docker/backend/Dockerfile
     container_name: openvault-backend
     shm_size: 1g
     expose:
@@ -58,8 +68,8 @@ services:
   worker:
     image: l1ghth4t/openvault-worker:latest
     build:
-      context: ./src/
-      dockerfile: Dockerfile.worker
+      context: ./backend/
+      dockerfile: ../docker/celery-worker/Dockerfile
     shm_size: 1g
     volumes:
       - static_volume:/home/app/web/static
@@ -68,15 +78,15 @@ services:
       - ./.env
     depends_on:
       - db
-      - web
+      - backend
       - redis
     restart: always
 
   # beat:
   #   image: l1ghth4t/openvault-beat:latest
   #   build:
-  #     context: ./src/
-  #     dockerfile: Dockerfile.beat
+  #     context: ./backend/
+  #     dockerfile: ../docker/celery-beat/Dockerfile
   #   shm_size: 1g
   #   volumes:
   #     - static_volume:/home/app/web/static
@@ -85,14 +95,16 @@ services:
   #     - ./.env
   #   depends_on:
   #     - db
-  #     - web
+  #     - backend
   #     - worker
   #     - redis
   #   restart: always
 
   nginx:
     image: l1ghth4t/openvault-nginx:latest
-    build: ./nginx/
+    build:
+      context: ./nginx/
+      dockerfile: ../docker/nginx/Dockerfile
     container_name: openvault-nginx
     volumes:
       - static_volume:/home/app/web/static
@@ -102,7 +114,7 @@ services:
     env_file:
       - ./.env
     depends_on:
-      - web
+      - backend
     restart: always
     healthcheck:
       test: curl --fail http://localhost:80 || exit 1

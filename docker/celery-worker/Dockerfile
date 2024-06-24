@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 RUN apt -y update \
-    && apt -y install gcc python3-dev musl-dev netcat curl
+    && apt -y install gcc python3-dev musl-dev netcat-traditional curl
 
 RUN apt-get -y update \
     && apt-get install linux-libc-dev
