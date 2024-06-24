@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     #'django_celery_beat',
 ]
 
-#AUTH_USER_MODEL = 'api.Profile'
+AUTH_USER_MODEL = 'api.Profile'
 
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
