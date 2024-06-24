@@ -17,6 +17,17 @@ services:
       timeout: 5s
       retries: 3
 
+  s3:
+    image: minio/minio
+    expose:
+      - 9000
+      - 9001
+    volumes:
+      - s3_storage:/data
+    env_file:
+      - ./.env.s3
+    command: server --console-address ":9001" /data
+
   redis:
     image: redis:7.0.15
     container_name: openvault-redis
@@ -126,4 +137,5 @@ volumes:
   postgres_volume:
   static_volume:
   media_volume:
+  s3_storage:
   cache:

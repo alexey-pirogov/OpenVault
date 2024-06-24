@@ -27,6 +27,14 @@ POSTGRES_DB=database
 
 ```
 
+Create `.env.s3` file for MinIO S3 storage:
+
+```
+MINIO_ROOT_USER=test
+MINIO_ROOT_PASSWORD=12345678
+
+```
+
 ## Quickstart
 
 Build & run project with docker-compose:
